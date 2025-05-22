@@ -1,7 +1,28 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { PGlite } from '@electric-sql/pglite';
+import {
+  Box,
+  Button,
+  Container,
+  Divider,
+  FormControl,
+  Grid,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Typography,
+} from '@mui/material';
 
 const db = new PGlite('idb://my-db');
+
 const App = () => {
   const [patients, setPatients] = useState([]);
   const [form, setForm] = useState({ name: '', age: '', gender: '' });
@@ -20,7 +41,6 @@ const App = () => {
           gender TEXT
         );
       `);
-      console.log('Database initialized');
       await loadPatients();
       setDbReady(true);
     } catch (err) {
@@ -32,12 +52,12 @@ const App = () => {
     try {
       const result = await db.exec('SELECT * FROM patients ORDER BY id DESC;');
       const rows = result[0]?.rows ?? [];
-      console.log(' Fetched patients:', rows);
       setPatients(rows);
     } catch (err) {
-      console.error(' Error loading patients:', err);
+      console.error('Error loading patients:', err);
     }
   };
+
   const handleRegister = async (e) => {
     e.preventDefault();
     const { name, age, gender } = form;
@@ -47,16 +67,11 @@ const App = () => {
       return;
     }
 
-    const safeName = name.replace(/'/g, "''");
-    const safeGender = gender.replace(/'/g, "''");
-
     try {
       await db.exec(
-        `INSERT INTO patients (name, age, gender) VALUES ('${safeName}', ${Number(age)}, '${safeGender}');`
+        `INSERT INTO patients (name, age, gender) VALUES ('${name.replace(/'/g, "''")}', ${Number(age)}, '${gender.replace(/'/g, "''")}');`
       );
-      console.log('Patient registered:', { name, age, gender });
       setForm({ name: '', age: '', gender: '' });
-
       await loadPatients();
       broadcastRef.current?.postMessage('update');
     } catch (err) {
@@ -68,13 +83,13 @@ const App = () => {
     try {
       const result = await db.exec(sql);
       const rows = result[0]?.rows ?? [];
-      console.log('SQL executed:', sql, rows);
       setSqlResult(rows);
     } catch (e) {
       alert('Invalid SQL');
       console.error('SQL Error:', e);
     }
   };
+
   useEffect(() => {
     initDb();
 
@@ -82,7 +97,6 @@ const App = () => {
       const bc = new BroadcastChannel('patient-db-sync');
       broadcastRef.current = bc;
       bc.onmessage = () => {
-        console.log('🔄 Received broadcast update');
         loadPatients();
       };
       return () => bc.close();
@@ -90,119 +104,158 @@ const App = () => {
   }, []);
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Patient Registration</h1>
+    <Box sx={{ bgcolor: '#f4f6f8', minHeight: '100vh', py: 6 }}>
+      <Container maxWidth="xl">
+        <Paper elevation={4} sx={{ p: 4, borderRadius: 4 }}>
+          <Typography variant="h4" align="center" fontWeight="bold" gutterBottom>
+            Patient Registration App
+          </Typography>
 
-      {!dbReady ? (
-        <div>Loading database...</div>
-      ) : (
-        <>
-          <form onSubmit={handleRegister} className="space-y-4 mb-8">
-            <input
-              type="text"
-              placeholder="Name"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="border p-2 w-full"
-              required
-            />
-            <input
-              type="number"
-              placeholder="Age"
-              value={form.age}
-              onChange={(e) => setForm({ ...form, age: e.target.value })}
-              className="border p-2 w-full"
-              required
-            />
-            <select
-              value={form.gender}
-              onChange={(e) => setForm({ ...form, gender: e.target.value })}
-              className="border p-2 w-full"
-              required
-            >
-              <option value="">Select Gender</option>
-              <option>Male</option>
-              <option>Female</option>
-              <option>Other</option>
-            </select>
-            <button className="bg-blue-500 text-white p-2 rounded" type="submit">
-              Register Patient
-            </button>
-          </form>
+          {!dbReady ? (
+            <Typography align="center" color="text.secondary" py={4}>
+              Loading database...
+            </Typography>
+          ) : (
+            <Grid container spacing={4} alignItems="stretch">
+              {/* Left Column */}
+              <Grid item xs={12} md={6}>
+                <Paper elevation={2} sx={{ p: 3, mb: 4, borderRadius: 3 }}>
+                  <Typography variant="h6" gutterBottom>
+                    Register Patient
+                  </Typography>
+                  <Box component="form" onSubmit={handleRegister}>
+                    <TextField
+                      fullWidth
+                      label="Name"
+                      variant="outlined"
+                      margin="normal"
+                      value={form.name}
+                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      required
+                    />
+                    <TextField
+                      fullWidth
+                      label="Age"
+                      type="number"
+                      variant="outlined"
+                      margin="normal"
+                      value={form.age}
+                      onChange={(e) => setForm({ ...form, age: e.target.value })}
+                      required
+                    />
+                    <FormControl fullWidth margin="normal">
+                      <InputLabel>Gender</InputLabel>
+                      <Select
+                        value={form.gender}
+                        label="Gender"
+                        onChange={(e) => setForm({ ...form, gender: e.target.value })}
+                        required
+                      >
+                        <MenuItem value="Male">Male</MenuItem>
+                        <MenuItem value="Female">Female</MenuItem>
+                        <MenuItem value="Other">Other</MenuItem>
+                      </Select>
+                    </FormControl>
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      color="primary"
+                      fullWidth
+                      sx={{ mt: 2, py: 1.2 }}
+                    >
+                      Register
+                    </Button>
+                  </Box>
+                </Paper>
 
-          {/* Debug: Show patients array */}
-          <pre className="bg-gray-100 p-2 mb-4 rounded text-xs">{JSON.stringify(patients, null, 2)}</pre>
+                <Paper elevation={2} sx={{ p: 3, borderRadius: 3 }}>
+                  <Typography variant="h6" gutterBottom>
+                    Run Raw SQL
+                  </Typography>
+                  <TextField
+                    fullWidth
+                    multiline
+                    minRows={4}
+                    label="SQL Query"
+                    variant="outlined"
+                    value={sql}
+                    onChange={(e) => setSql(e.target.value)}
+                  />
+                  <Button
+                    variant="outlined"
+                    sx={{ mt: 2, fontWeight: 600 }}
+                    onClick={handleSqlQuery}
+                  >
+                    Run SQL
+                  </Button>
+                </Paper>
+              </Grid>
 
-          {patients.length > 0 && (
-            <div className="mb-8">
-              <h2 className="text-xl font-semibold mb-2">Table: <span className="font-mono">patients</span></h2>
-              <table className="w-full table-auto border-collapse border border-gray-300">
-                <thead className="bg-gray-100">
-                  <tr>
-                    <th className="border p-2">ID</th>
-                    <th className="border p-2">Name</th>
-                    <th className="border p-2">Age</th>
-                    <th className="border p-2">Gender</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {patients.map((p) => (
-                    <tr key={p.id} className="text-center">
-                      <td className="border p-2">{p.id}</td>
-                      <td className="border p-2">{p.name}</td>
-                      <td className="border p-2">{p.age}</td>
-                      <td className="border p-2">{p.gender}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+              {/* Right Column */}
+              <Grid item xs={12} md={6}>
+                {patients.length > 0 && (
+                  <Paper elevation={2} sx={{ p: 3, mb: 4, borderRadius: 3 }}>
+                    <Typography variant="h6" gutterBottom>
+                      Registered Patients
+                    </Typography>
+                    <TableContainer>
+                      <Table size="small">
+                        <TableHead sx={{ bgcolor: '#f0f0f0' }}>
+                          <TableRow>
+                            <TableCell>ID</TableCell>
+                            <TableCell>Name</TableCell>
+                            <TableCell>Age</TableCell>
+                            <TableCell>Gender</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {patients.map((p) => (
+                            <TableRow key={p.id} hover>
+                              <TableCell>{p.id}</TableCell>
+                              <TableCell>{p.name}</TableCell>
+                              <TableCell>{p.age}</TableCell>
+                              <TableCell>{p.gender}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </Paper>
+                )}
+
+                {sqlResult.length > 0 && (
+                  <Paper elevation={2} sx={{ p: 3, borderRadius: 3 }}>
+                    <Typography variant="h6" gutterBottom>
+                      SQL Query Results
+                    </Typography>
+                    <TableContainer>
+                      <Table size="small">
+                        <TableHead sx={{ bgcolor: '#f0f0f0' }}>
+                          <TableRow>
+                            {Object.keys(sqlResult[0]).map((key) => (
+                              <TableCell key={key}>{key}</TableCell>
+                            ))}
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {sqlResult.map((row, i) => (
+                            <TableRow key={i}>
+                              {Object.values(row).map((val, j) => (
+                                <TableCell key={j}>{val}</TableCell>
+                              ))}
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </Paper>
+                )}
+              </Grid>
+            </Grid>
           )}
-
-          <div className="mt-8">
-            <h2 className="font-bold text-xl mb-2">Run Raw SQL</h2>
-            <textarea
-              value={sql}
-              onChange={(e) => setSql(e.target.value)}
-              placeholder="SELECT * FROM patients;"
-              className="border p-2 w-full h-24"
-            />
-            <button
-              onClick={handleSqlQuery}
-              className="bg-green-500 text-white mt-2 p-2 rounded"
-            >
-              Run SQL
-            </button>
-            <div className="mt-4">
-              {sqlResult.length > 0 && (
-                <table className="w-full border">
-                  <thead>
-                    <tr>
-                      {Object.keys(sqlResult[0]).map((key) => (
-                        <th className="border p-2" key={key}>
-                          {key}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sqlResult.map((row, i) => (
-                      <tr key={i}>
-                        {Object.values(row).map((val, j) => (
-                          <td className="border p-2" key={j}>
-                            {val}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          </div>
-        </>
-      )}
-    </div>
+        </Paper>
+      </Container>
+    </Box>
   );
 };
 
