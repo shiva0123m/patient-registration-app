@@ -9,4 +9,22 @@ const App = () => {
   const [sqlResult, setSqlResult] = useState([]);
   const [dbReady, setDbReady] = useState(false);
   const broadcastRef = useRef(null);
+
+    const initDb = async () => {
+    try {
+      await db.exec(`
+        CREATE TABLE IF NOT EXISTS patients (
+          id SERIAL PRIMARY KEY,
+          name TEXT,
+          age INTEGER,
+          gender TEXT
+        );
+      `);
+      console.log('✅ Database initialized');
+      await loadPatients();
+      setDbReady(true);
+    } catch (err) {
+      console.error('❌ Error initializing database:', err);
+    }
+  };
 };
