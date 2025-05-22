@@ -64,5 +64,16 @@ const App = () => {
     }
   };
 
+    const handleSqlQuery = async () => {
+    try {
+      const result = await db.exec(sql);
+      const rows = result[0]?.rows ?? [];
+      console.log('SQL executed:', sql, rows);
+      setSqlResult(rows);
+    } catch (e) {
+      alert('Invalid SQL');
+      console.error('SQL Error:', e);
+    }
+  };
 
 };
