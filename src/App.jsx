@@ -38,5 +38,31 @@ const App = () => {
       console.error(' Error loading patients:', err);
     }
   };
+    const handleRegister = async (e) => {
+    e.preventDefault();
+    const { name, age, gender } = form;
+
+    if (!name || !gender || isNaN(Number(age))) {
+      alert('Please enter valid data');
+      return;
+    }
+
+    const safeName = name.replace(/'/g, "''");
+    const safeGender = gender.replace(/'/g, "''");
+
+    try {
+      await db.exec(
+        `INSERT INTO patients (name, age, gender) VALUES ('${safeName}', ${Number(age)}, '${safeGender}');`
+      );
+      console.log('Patient registered:', { name, age, gender });
+      setForm({ name: '', age: '', gender: '' });
+
+      await loadPatients();
+      broadcastRef.current?.postMessage('update');
+    } catch (err) {
+      console.error('Error registering patient:', err);
+    }
+  };
+
 
 };
