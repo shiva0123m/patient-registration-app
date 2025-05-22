@@ -20,11 +20,23 @@ const App = () => {
           gender TEXT
         );
       `);
-      console.log('✅ Database initialized');
+      console.log('Database initialized');
       await loadPatients();
       setDbReady(true);
     } catch (err) {
-      console.error('❌ Error initializing database:', err);
+      console.error('Error initializing database:', err);
     }
   };
+
+    const loadPatients = async () => {
+    try {
+      const result = await db.exec('SELECT * FROM patients ORDER BY id DESC;');
+      const rows = result[0]?.rows ?? [];
+      console.log(' Fetched patients:', rows);
+      setPatients(rows);
+    } catch (err) {
+      console.error(' Error loading patients:', err);
+    }
+  };
+
 };
