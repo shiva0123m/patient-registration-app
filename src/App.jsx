@@ -75,5 +75,19 @@ const App = () => {
       console.error('SQL Error:', e);
     }
   };
+    useEffect(() => {
+    initDb();
+
+    if (typeof BroadcastChannel !== 'undefined') {
+      const bc = new BroadcastChannel('patient-db-sync');
+      broadcastRef.current = bc;
+      bc.onmessage = () => {
+        console.log('🔄 Received broadcast update');
+        loadPatients();
+      };
+      return () => bc.close();
+    }
+  }, []);
+
 
 };
