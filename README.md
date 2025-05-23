@@ -75,6 +75,7 @@ SELECT COUNT(*) FROM patients;
 -- Delete all records
 DELETE FROM patients;
 
+## Note : If you are using DML command such as update queries and delete queries then result will be reflected after refereshing the page.
 
 🔁 Syncing Across Tabs
 This app uses the BroadcastChannel API to keep all open browser tabs in sync. Registering a patient in one tab will automatically update the list in others.
